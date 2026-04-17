@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Turmas</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#f5f5f5;
+text-align:center;
+margin:0;
+}
+
+.box{
+background:white;
+width:380px;
+margin:auto;
+margin-top:30px;
+padding:20px;
+border-radius:8px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+select{
+width:100%;
+padding:8px;
+font-size:15px;
+}
+
+input{
+width:95%;
+padding:8px;
+margin-top:10px;
+}
+
+button{
+width:100%;
+padding:10px;
+margin-top:10px;
+font-size:15px;
+border:none;
+border-radius:5px;
+background:#2c7be5;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#1a5ed8;
+}
+
+.voltar{
+background:#6c757d;
+}
+
+.voltar:hover{
+background:#545b62;
+}
+
+ul{
+list-style:none;
+padding:0;
+}
+
+li{
+background:#f1f1f1;
+margin:5px;
+padding:8px;
+border-radius:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>Cadastrar Turma</h2>
+
+<form method="POST">
+
+<label>Disciplina</label>
+<select name="disciplina" required>
+{% for d in disciplinas %}
+<option value="{{ d }}">{{ d }}</option>
+{% endfor %}
+</select>
+
+<input name="turma" placeholder="Nome da turma" required>
+
+<button type="submit">Cadastrar Turma</button>
+
+</form>
+
+<hr>
+
+<h3>Turmas cadastradas</h3>
+
+<ul>
+{% for d,t in registros %}
+<li>{{ d }} - {{ t }}</li>
+{% endfor %}
+</ul>
+
+<br>
+
+<a href="/menu">
+<button class="voltar">Voltar</button>
+</a>
+
+</div>
+
+</body>
+</html>
