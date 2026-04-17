@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Diário de Classe</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#f5f5f5;
+text-align:center;
+margin:0;
+padding:0;
+}
+
+.box{
+background:white;
+width:340px;
+margin:auto;
+margin-top:40px;
+padding:20px;
+border-radius:8px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+h2{
+margin-top:0;
+}
+
+button{
+width:100%;
+padding:12px;
+margin:6px 0;
+font-size:15px;
+border:none;
+border-radius:5px;
+background:#2c7be5;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#1a5ed8;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>Diário de Classe</h2>
+
+<h3>Bem-vindo, {{ session.usuario }}</h3>
+
+<a href="/disciplinas">
+<button>Disciplinas</button>
+</a>
+
+<a href="/turmas">
+<button>Turmas</button>
+</a>
+
+<a href="/alunos">
+<button>Alunos</button>
+</a>
+
+<a href="/presenca">
+<button>Presença</button>
+</a>
+
+<a href="/notas">
+<button>Notas</button>
+</a>
+
+<a href="/conteudos">
+<button>Conteúdos</button>
+</a>
+
+<a href="/relatorio">
+<button>Relatório PDF</button>
+</a>
+
+</div>
+
+</body>
+</html>
