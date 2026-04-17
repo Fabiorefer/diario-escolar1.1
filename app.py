@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for, send_file
+from flask import Flask, render_template, request, redirect, session, send_file
 from pymongo import MongoClient
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
@@ -8,7 +8,7 @@ import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "diario_secret"
+app.secret_key = os.environ.get("SECRET_KEY", "segredo_dev")
 
 # ===============================
 # MONGODB
@@ -16,20 +16,38 @@ app.secret_key = "diario_secret"
 mongo_uri = os.environ.get("MONGO_URI")
 
 if not mongo_uri:
-    raise Exception("MONGO_URI não encontrada no Vercel")
+    raise Exception("MONGO_URI não configurada")
 
 client = MongoClient(mongo_uri)
 db = client["diario_escolar"]
 
 # ===============================
-# CRIAR USUARIO
+# LOGIN
 # ===============================
-@app.route("/criar", methods=["GET", "POST"])
-def criar_usuario():
-
+@app.route("/", methods=["GET","POST"])
+def login():
     if request.method == "POST":
-        usuario = request.form["usuario"]
-        senha = request.form["senha"]
+        usuario = request.form.get("usuario")
+        senha = request.form.get("senha")
+
+        user = db.usuarios.find_one({"usuario": usuario})
+
+        if user and check_password_hash(user["senha"], senha):
+            session["usuario"] = usuario
+            return redirect("/menu")
+        else:
+            return render_template("login.html", erro="Usuário ou senha inválidos")
+
+    return render_template("login.html")
+
+# ===============================
+# CRIAR USUÁRIO
+# ===============================
+@app.route("/criar", methods=["GET","POST"])
+def criar_usuario():
+    if request.method == "POST":
+        usuario = request.form.get("usuario")
+        senha = request.form.get("senha")
 
         if db.usuarios.find_one({"usuario": usuario}):
             return "Usuário já existe!"
@@ -44,26 +62,6 @@ def criar_usuario():
         return redirect("/")
 
     return render_template("criar.html")
-
-# ===============================
-# LOGIN
-# ===============================
-@app.route("/", methods=["GET","POST"])
-def login():
-
-    if request.method == "POST":
-        usuario = request.form["usuario"]
-        senha = request.form["senha"]
-
-        user = db.usuarios.find_one({"usuario": usuario})
-
-        if user and check_password_hash(user["senha"], senha):
-            session["usuario"] = usuario
-            return redirect("/menu")
-        else:
-            return render_template("login.html", erro="Usuário ou senha inválidos")
-
-    return render_template("login.html")
 
 # ===============================
 # MENU
@@ -120,8 +118,8 @@ def turmas():
     if request.method == "POST":
         db.turmas.insert_one({
             "professor": professor,
-            "disciplina": request.form["disciplina"],
-            "turma": request.form["turma"]
+            "disciplina": request.form.get("disciplina"),
+            "turma": request.form.get("turma")
         })
 
     disciplinas = [d["disciplina"] for d in db.disciplinas.find({"professor": professor})]
@@ -143,9 +141,9 @@ def alunos():
     if request.method == "POST":
         db.alunos.insert_one({
             "professor": professor,
-            "disciplina": request.form["disciplina"],
-            "turma": request.form["turma"],
-            "aluno": request.form["aluno"]
+            "disciplina": request.form.get("disciplina"),
+            "turma": request.form.get("turma"),
+            "aluno": request.form.get("aluno")
         })
 
     disciplinas = [d["disciplina"] for d in db.disciplinas.find({"professor": professor})]
@@ -189,8 +187,7 @@ def presenca():
             "data": data
         })
 
-        i = 1
-        for aluno in alunos:
+        for i, aluno in enumerate(alunos, start=1):
             valor = request.form.get(f"presenca_{i}") or "F"
 
             db.presenca.insert_one({
@@ -201,8 +198,6 @@ def presenca():
                 "aluno": aluno,
                 "valor": valor
             })
-
-            i += 1
 
     presencas = {}
     registros = db.presenca.find({
@@ -252,9 +247,6 @@ def notas():
             "turma": turma
         })]
 
-    # =====================
-    # SALVAR NOTAS
-    # =====================
     if request.method == "POST":
 
         db.notas.delete_many({
@@ -266,38 +258,26 @@ def notas():
 
         for i, aluno in enumerate(alunos, start=1):
 
-            p1 = float(request.form.get(f"p1_{i}") or 0)
-            p2 = float(request.form.get(f"p2_{i}") or 0)
-            trab = float(request.form.get(f"trab_{i}") or 0)
-            part = float(request.form.get(f"part_{i}") or 0)
-            tarefa = float(request.form.get(f"tarefa_{i}") or 0)
-
             db.notas.insert_one({
                 "professor": professor,
                 "disciplina": disciplina,
                 "turma": turma,
                 "bimestre": bimestre,
                 "aluno": aluno,
-                "p1": p1,
-                "p2": p2,
-                "trab": trab,
-                "part": part,
-                "tarefa": tarefa
+                "p1": float(request.form.get(f"p1_{i}") or 0),
+                "p2": float(request.form.get(f"p2_{i}") or 0),
+                "trab": float(request.form.get(f"trab_{i}") or 0),
+                "part": float(request.form.get(f"part_{i}") or 0),
+                "tarefa": float(request.form.get(f"tarefa_{i}") or 0)
             })
 
-    # =====================
-    # BUSCAR NOTAS
-    # =====================
     notas = {}
-
-    registros = db.notas.find({
+    for r in db.notas.find({
         "professor": professor,
         "disciplina": disciplina,
         "turma": turma,
         "bimestre": bimestre
-    })
-
-    for r in registros:
+    }):
         notas[r["aluno"]] = r
 
     return render_template("notas.html",
@@ -329,13 +309,7 @@ def conteudos():
     disciplinas = list(set([d["disciplina"] for d in db.disciplinas.find({"professor": professor})]))
     turmas = list(set([t["turma"] for t in db.turmas.find({"professor": professor})]))
 
-    conteudo_atual = ""
-
-    # =====================
-    # SALVAR
-    # =====================
     if request.method == "POST":
-
         conteudo = request.form.get("conteudo")
 
         db.conteudos.delete_many({
@@ -353,9 +327,6 @@ def conteudos():
             "conteudo": conteudo
         })
 
-    # =====================
-    # BUSCAR CONTEÚDO ATUAL
-    # =====================
     atual = db.conteudos.find_one({
         "professor": professor,
         "disciplina": disciplina,
@@ -363,12 +334,8 @@ def conteudos():
         "data": data
     })
 
-    if atual:
-        conteudo_atual = atual.get("conteudo", "")
+    conteudo_atual = atual["conteudo"] if atual else ""
 
-    # =====================
-    # LISTAR TODOS
-    # =====================
     lista = list(db.conteudos.find({
         "professor": professor,
         "disciplina": disciplina,
@@ -406,7 +373,7 @@ def relatorio():
     )
 
 # ===============================
-# GERAR PDF
+# RELATÓRIO PDF
 # ===============================
 @app.route("/relatorio_pdf")
 def relatorio_pdf():
@@ -426,7 +393,6 @@ def relatorio_pdf():
         "turma": turma
     })]
 
-    # buscar notas
     notas_db = db.notas.find({
         "professor": professor,
         "disciplina": disciplina,
@@ -434,14 +400,9 @@ def relatorio_pdf():
         "bimestre": bimestre
     })
 
-    notas = {}
-    for n in notas_db:
-        notas[n["aluno"]] = n
+    notas = {n["aluno"]: n for n in notas_db}
 
-    # =====================
-    # GERAR PDF
-    # =====================
-    arquivo = "relatorio.pdf"
+    arquivo = "/tmp/relatorio.pdf"
     doc = SimpleDocTemplate(arquivo, pagesize=A4)
 
     styles = getSampleStyleSheet()
@@ -453,36 +414,28 @@ def relatorio_pdf():
     elementos.append(Paragraph(f"Bimestre: {bimestre}", styles["Normal"]))
     elementos.append(Spacer(1,20))
 
-    # tabela
     dados = [["Aluno","P1","P2","Trab","Part","Tarefa","Média"]]
 
     for aluno in alunos:
-
         n = notas.get(aluno, {})
-
         p1 = n.get("p1",0)
         p2 = n.get("p2",0)
         trab = n.get("trab",0)
         part = n.get("part",0)
         tarefa = n.get("tarefa",0)
 
-        media = round(
-            (p1*0.3)+(p2*0.3)+(trab*0.1333)+(part*0.1333)+(tarefa*0.1333),1
-        )
+        media = round((p1*0.3)+(p2*0.3)+(trab*0.1333)+(part*0.1333)+(tarefa*0.1333),1)
 
         dados.append([aluno,p1,p2,trab,part,tarefa,media])
 
     tabela = Table(dados)
-
     tabela.setStyle(TableStyle([
         ("BACKGROUND",(0,0),(-1,0),colors.grey),
         ("TEXTCOLOR",(0,0),(-1,0),colors.white),
-        ("ALIGN",(0,0),(-1,-1),"CENTER"),
         ("GRID",(0,0),(-1,-1),1,colors.black)
     ]))
 
     elementos.append(tabela)
-
     doc.build(elementos)
 
     return send_file(arquivo, as_attachment=True)
@@ -492,7 +445,7 @@ def relatorio_pdf():
 # ===============================
 @app.route("/teste")
 def teste():
-    return "API OK"
+    return "API OK 🚀"
 
 # ===============================
 # VERCEL
