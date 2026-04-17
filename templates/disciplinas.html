@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Disciplinas</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#f5f5f5;
+text-align:center;
+margin:0;
+}
+
+.box{
+background:white;
+width:350px;
+margin:auto;
+margin-top:40px;
+padding:20px;
+border-radius:8px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+select{
+width:100%;
+padding:8px;
+font-size:15px;
+}
+
+input{
+width:100%;
+padding:8px;
+font-size:15px;
+margin-bottom:10px;
+}
+
+button{
+width:100%;
+padding:10px;
+margin-top:10px;
+font-size:15px;
+border:none;
+border-radius:5px;
+background:#2c7be5;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#1a5ed8;
+}
+
+.voltar{
+background:#6c757d;
+}
+
+.voltar:hover{
+background:#545b62;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>Disciplinas</h2>
+
+<!-- CADASTRAR DISCIPLINA -->
+<form method="POST">
+<input type="text" name="nova_disciplina" placeholder="Digite a disciplina" required>
+<button type="submit">Cadastrar Disciplina</button>
+</form>
+
+<br>
+
+<!-- LISTA DISCIPLINAS -->
+<form method="GET">
+
+<select name="disciplina" size="8">
+{% for d in disciplinas %}
+<option value="{{ d }}">{{ d }}</option>
+{% endfor %}
+</select>
+
+<button type="submit">Selecionar</button>
+
+</form>
+
+<a href="/menu">
+<button class="voltar">Voltar</button>
+</a>
+
+</div>
+
+</body>
+</html>
