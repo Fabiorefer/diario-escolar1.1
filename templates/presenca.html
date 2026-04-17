@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Presença</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#f5f5f5;
+text-align:center;
+margin:0;
+}
+
+.box{
+background:white;
+width:700px;
+margin:auto;
+margin-top:30px;
+padding:20px;
+border-radius:8px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+table{
+border-collapse: collapse;
+width:100%;
+}
+
+td,th{
+border:1px solid #ccc;
+padding:6px;
+text-align:center;
+}
+
+th{
+background:#f1f1f1;
+}
+
+select,input{
+padding:6px;
+margin:3px;
+}
+
+button{
+padding:8px 15px;
+margin-top:10px;
+border:none;
+background:#2c7be5;
+color:white;
+border-radius:5px;
+cursor:pointer;
+}
+
+button:hover{
+background:#1a5ed8;
+}
+
+.voltar{
+background:#6c757d;
+}
+
+.voltar:hover{
+background:#545b62;
+}
+
+.msg{
+background:#d4edda;
+padding:10px;
+margin-bottom:10px;
+border-radius:5px;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="box">
+
+<h2>Controle de Presença</h2>
+
+{% if salvo %}
+<div class="msg">
+Presença salva com sucesso
+</div>
+{% endif %}
+
+<form method="GET">
+
+Disciplina
+<select name="disciplina" required>
+<option value="">Selecione</option>
+{% for d in disciplinas %}
+<option value="{{ d }}" {% if disciplina == d %}selected{% endif %}>
+{{ d }}
+</option>
+{% endfor %}
+</select>
+
+Turma
+<select name="turma" required>
+<option value="">Selecione</option>
+{% for t in turmas %}
+<option value="{{ t }}" {% if turma == t %}selected{% endif %}>
+{{ t }}
+</option>
+{% endfor %}
+</select>
+
+Data
+<input type="date" name="data" value="{{ data }}" required>
+
+<br>
+<button type="submit">Carregar</button>
+
+</form>
+
+<br>
+
+{% if alunos %}
+
+<form method="POST">
+
+<input type="hidden" name="disciplina" value="{{ disciplina }}">
+<input type="hidden" name="turma" value="{{ turma }}">
+<input type="hidden" name="data" value="{{ data }}">
+
+<table>
+
+<tr>
+<th style="text-align:left">Aluno</th>
+<th>Presente</th>
+<th>Falta</th>
+</tr>
+
+{% for aluno in alunos %}
+<tr>
+
+<td style="text-align:left">
+{{ aluno }}
+</td>
+
+<td>
+<input 
+type="radio"
+name="presenca_{{ loop.index }}"
+value="P"
+required
+{% if presencas and presencas.get(aluno) == "P" %}checked{% endif %}
+>
+</td>
+
+<td>
+<input 
+type="radio"
+name="presenca_{{ loop.index }}"
+value="F"
+required
+{% if presencas and presencas.get(aluno) == "F" %}checked{% endif %}
+>
+</td>
+
+<input type="hidden" name="aluno_{{ loop.index }}" value="{{ aluno }}">
+
+</tr>
+{% endfor %}
+
+</table>
+
+<br>
+<button type="submit">Salvar Presença</button>
+
+</form>
+
+{% endif %}
+
+<br>
+
+<a href="/menu">
+<button class="voltar">Voltar</button>
+</a>
+
+</div>
+
+</body>
+</html>
