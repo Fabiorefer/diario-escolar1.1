@@ -2,36 +2,99 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login - Diário de Classe</title>
 
 <style>
+
+*{
+    box-sizing: border-box;
+}
+
 body{
-font-family: Arial;
-background:#f5f5f5;
-text-align:center;
-margin-top:60px;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #2c7be5, #6a11cb);
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
+/* CAIXA */
 .box{
-background:white;
-width:300px;
-margin:auto;
-padding:20px;
-border-radius:8px;
-box-shadow:0 0 10px rgba(0,0,0,0.2);
+    background:white;
+    width:90%;
+    max-width:350px;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+    text-align:center;
 }
 
+/* TÍTULO */
+h2{
+    margin-bottom:20px;
+    color:#333;
+}
+
+/* INPUTS */
 input{
-width:90%;
-padding:8px;
-margin:5px;
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border-radius:5px;
+    border:1px solid #ccc;
+    font-size:14px;
 }
 
+/* BOTÕES */
 button{
-padding:8px;
-margin:5px;
-width:95%;
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border:none;
+    border-radius:5px;
+    background:#2c7be5;
+    color:white;
+    font-size:15px;
+    cursor:pointer;
+    transition:0.3s;
 }
+
+button:hover{
+    background:#1a5ed8;
+}
+
+/* BOTÃO SECUNDÁRIO */
+.btn-sec{
+    background:#6c757d;
+}
+
+.btn-sec:hover{
+    background:#545b62;
+}
+
+/* ERRO */
+.erro{
+    color:red;
+    margin-bottom:10px;
+    font-size:14px;
+}
+
+/* RESPONSIVO EXTRA */
+@media (max-width: 400px){
+
+    .box{
+        padding:20px;
+    }
+
+    h2{
+        font-size:20px;
+    }
+
+}
+
 </style>
 
 </head>
@@ -43,21 +106,21 @@ width:95%;
 <h2>Diário de Classe</h2>
 
 {% if erro %}
-<p style="color:red">{{ erro }}</p>
+<p class="erro">{{ erro }}</p>
 {% endif %}
 
 <form method="POST">
 
-<input name="usuario" placeholder="Usuário">
+<input name="usuario" placeholder="Usuário" required>
 
-<input name="senha" type="password" placeholder="Senha">
+<input name="senha" type="password" placeholder="Senha" required>
 
 <button type="submit">Entrar</button>
 
 </form>
 
 <a href="/criar">
-<button>Criar Usuário</button>
+<button class="btn-sec">Criar Usuário</button>
 </a>
 
 </div>
