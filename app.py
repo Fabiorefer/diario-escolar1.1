@@ -387,12 +387,18 @@ def relatorio_pdf():
     turma = request.args.get("turma")
     bimestre = request.args.get("bimestre")
 
+    # ===============================
+    # ALUNOS
+    # ===============================
     alunos = [a["aluno"] for a in db.alunos.find({
         "professor": professor,
         "disciplina": disciplina,
         "turma": turma
     })]
 
+    # ===============================
+    # NOTAS
+    # ===============================
     notas_db = db.notas.find({
         "professor": professor,
         "disciplina": disciplina,
@@ -402,17 +408,59 @@ def relatorio_pdf():
 
     notas = {n["aluno"]: n for n in notas_db}
 
+    # ===============================
+    # PRESENÇAS (AGRUPADAS POR DATA)
+    # ===============================
+    presencas_db = list(db.presenca.find({
+        "professor": professor,
+        "disciplina": disciplina,
+        "turma": turma
+    }))
+
+    datas_presenca = sorted(list(set([p["data"] for p in presencas_db])))
+
+    presencas = {}
+    for p in presencas_db:
+        aluno = p["aluno"]
+        data = p["data"]
+        valor = p["valor"]
+
+        if aluno not in presencas:
+            presencas[aluno] = {}
+
+        presencas[aluno][data] = valor
+
+    # ===============================
+    # CONTEÚDOS
+    # ===============================
+    conteudos_db = list(db.conteudos.find({
+        "professor": professor,
+        "disciplina": disciplina,
+        "turma": turma
+    }).sort("data", 1))
+
+    # ===============================
+    # PDF
+    # ===============================
     arquivo = "/tmp/relatorio.pdf"
     doc = SimpleDocTemplate(arquivo, pagesize=A4)
 
     styles = getSampleStyleSheet()
     elementos = []
 
-    elementos.append(Paragraph(f"Relatório - {disciplina}", styles["Title"]))
+    # TÍTULO
+    elementos.append(Paragraph(f"Relatório Escolar", styles["Title"]))
     elementos.append(Spacer(1,10))
+    elementos.append(Paragraph(f"Disciplina: {disciplina}", styles["Normal"]))
     elementos.append(Paragraph(f"Turma: {turma}", styles["Normal"]))
     elementos.append(Paragraph(f"Bimestre: {bimestre}", styles["Normal"]))
     elementos.append(Spacer(1,20))
+
+    # ===============================
+    # TABELA DE NOTAS
+    # ===============================
+    elementos.append(Paragraph("Notas dos Alunos", styles["Heading2"]))
+    elementos.append(Spacer(1,10))
 
     dados = [["Aluno","P1","P2","Trab","Part","Tarefa","Média"]]
 
@@ -436,6 +484,44 @@ def relatorio_pdf():
     ]))
 
     elementos.append(tabela)
+    elementos.append(Spacer(1,20))
+
+    # ===============================
+    # TABELA DE PRESENÇA
+    # ===============================
+    elementos.append(Paragraph("Controle de Presença", styles["Heading2"]))
+    elementos.append(Spacer(1,10))
+
+    cabecalho = ["Aluno"] + datas_presenca
+    dados_presenca = [cabecalho]
+
+    for aluno in alunos:
+        linha = [aluno]
+        for data in datas_presenca:
+            valor = presencas.get(aluno, {}).get(data, "-")
+            linha.append(valor)
+        dados_presenca.append(linha)
+
+    tabela_presenca = Table(dados_presenca)
+    tabela_presenca.setStyle(TableStyle([
+        ("GRID",(0,0),(-1,-1),1,colors.black),
+        ("BACKGROUND",(0,0),(-1,0),colors.lightgrey)
+    ]))
+
+    elementos.append(tabela_presenca)
+    elementos.append(Spacer(1,20))
+
+    # ===============================
+    # CONTEÚDOS DAS AULAS
+    # ===============================
+    elementos.append(Paragraph("Conteúdos das Aulas", styles["Heading2"]))
+    elementos.append(Spacer(1,10))
+
+    for c in conteudos_db:
+        elementos.append(Paragraph(f"<b>{c['data']}</b> - {c['conteudo']}", styles["Normal"]))
+        elementos.append(Spacer(1,8))
+
+    # GERAR PDF
     doc.build(elementos)
 
     return send_file(arquivo, as_attachment=True)
