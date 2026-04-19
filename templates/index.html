@@ -2,46 +2,97 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diário de Classe</title>
 
 <style>
 
+*{
+    box-sizing: border-box;
+}
+
 body{
-font-family: Arial;
-background:#f5f5f5;
-text-align:center;
-margin:0;
-padding:0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #2c7be5, #6a11cb);
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
+/* CAIXA PRINCIPAL */
 .box{
-background:white;
-width:340px;
-margin:auto;
-margin-top:40px;
-padding:20px;
-border-radius:8px;
-box-shadow:0 0 10px rgba(0,0,0,0.2);
+    background:white;
+    width:90%;
+    max-width:500px;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+    text-align:center;
 }
 
+/* TÍTULOS */
 h2{
-margin-top:0;
+    margin:0;
+    color:#333;
 }
 
+h3{
+    margin:10px 0 20px 0;
+    color:#666;
+    font-weight:normal;
+}
+
+/* GRID DE BOTÕES */
+.menu{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap:10px;
+}
+
+/* BOTÕES */
 button{
-width:100%;
-padding:12px;
-margin:6px 0;
-font-size:15px;
-border:none;
-border-radius:5px;
-background:#2c7be5;
-color:white;
-cursor:pointer;
+    width:100%;
+    padding:12px;
+    font-size:14px;
+    border:none;
+    border-radius:6px;
+    background:#2c7be5;
+    color:white;
+    cursor:pointer;
+    transition:0.3s;
 }
 
 button:hover{
-background:#1a5ed8;
+    background:#1a5ed8;
+}
+
+/* BOTÃO DIFERENTE (RELATÓRIO) */
+.btn-relatorio{
+    background:#28a745;
+}
+
+.btn-relatorio:hover{
+    background:#1e7e34;
+}
+
+/* RESPONSIVO EXTRA */
+@media (max-width:400px){
+
+    .box{
+        padding:20px;
+    }
+
+    h2{
+        font-size:20px;
+    }
+
+    button{
+        font-size:13px;
+        padding:10px;
+    }
+
 }
 
 </style>
@@ -53,36 +104,19 @@ background:#1a5ed8;
 <div class="box">
 
 <h2>Diário de Classe</h2>
-
 <h3>Bem-vindo, {{ session.usuario }}</h3>
 
-<a href="/disciplinas">
-<button>Disciplinas</button>
-</a>
+<div class="menu">
 
-<a href="/turmas">
-<button>Turmas</button>
-</a>
+<a href="/disciplinas"><button>Disciplinas</button></a>
+<a href="/turmas"><button>Turmas</button></a>
+<a href="/alunos"><button>Alunos</button></a>
+<a href="/presenca"><button>Presença</button></a>
+<a href="/notas"><button>Notas</button></a>
+<a href="/conteudos"><button>Conteúdos</button></a>
+<a href="/relatorio"><button class="btn-relatorio">Relatório PDF</button></a>
 
-<a href="/alunos">
-<button>Alunos</button>
-</a>
-
-<a href="/presenca">
-<button>Presença</button>
-</a>
-
-<a href="/notas">
-<button>Notas</button>
-</a>
-
-<a href="/conteudos">
-<button>Conteúdos</button>
-</a>
-
-<a href="/relatorio">
-<button>Relatório PDF</button>
-</a>
+</div>
 
 </div>
 
