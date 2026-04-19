@@ -1,56 +1,111 @@
 <!DOCTYPE html>
-
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatório</title>
 
 <style>
+
+*{
+    box-sizing: border-box;
+}
+
 body{
-font-family:Arial;
-background:#f5f5f5;
-text-align:center;
-margin:0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #2c7be5, #6a11cb);
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
+/* CAIXA */
 .box{
-background:white;
-width:500px;
-margin:auto;
-margin-top:40px;
-padding:20px;
-border-radius:8px;
-box-shadow:0 0 10px rgba(0,0,0,0.2);
+    background:white;
+    width:90%;
+    max-width:450px;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+    text-align:center;
 }
 
-select,button{
-padding:8px;
-margin:5px;
-width:250px;
+/* TÍTULO */
+h2{
+    margin-bottom:20px;
+    color:#333;
 }
 
+/* GRUPO */
+.grupo{
+    text-align:left;
+    margin-bottom:10px;
+}
+
+/* INPUTS */
+select{
+    width:100%;
+    padding:10px;
+    border-radius:5px;
+    border:1px solid #ccc;
+    margin-top:5px;
+}
+
+/* BOTÕES */
 button{
-background:#2c7be5;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:none;
+    border-radius:6px;
+    background:#2c7be5;
+    color:white;
+    font-size:15px;
+    cursor:pointer;
+    transition:0.3s;
 }
 
 button:hover{
-background:#1a5ed8;
+    background:#1a5ed8;
 }
 
+/* BOTÃO GERAR */
+.btn-gerar{
+    background:#28a745;
+}
+
+.btn-gerar:hover{
+    background:#1e7e34;
+}
+
+/* VOLTAR */
 .voltar{
-background:#6c757d;
+    background:#6c757d;
 }
 
 .voltar:hover{
-background:#545b62;
+    background:#545b62;
 }
+
+/* RESPONSIVO */
+@media (max-width:400px){
+
+    .box{
+        padding:20px;
+    }
+
+    h2{
+        font-size:20px;
+    }
+
+}
+
 </style>
 
 </head>
+
 <body>
 
 <div class="box">
@@ -59,8 +114,9 @@ background:#545b62;
 
 <form action="/relatorio_pdf" method="get">
 
-Disciplina<br> <select name="disciplina" required>
-
+<div class="grupo">
+<label>Disciplina</label>
+<select name="disciplina" required>
 <option value="">Selecione</option>
 {% for d in disciplinas %}
 <option value="{{ d }}" 
@@ -69,11 +125,11 @@ Disciplina<br> <select name="disciplina" required>
 </option>
 {% endfor %}
 </select>
+</div>
 
-<br>
-
-Turma<br> <select name="turma" required>
-
+<div class="grupo">
+<label>Turma</label>
+<select name="turma" required>
 <option value="">Selecione</option>
 {% for t in turmas %}
 <option value="{{ t }}"
@@ -82,21 +138,20 @@ Turma<br> <select name="turma" required>
 </option>
 {% endfor %}
 </select>
+</div>
 
-<br>
-
-Bimestre<br> <select name="bimestre" required>
-
+<div class="grupo">
+<label>Bimestre</label>
+<select name="bimestre" required>
 <option value="">Selecione</option>
 <option value="1" {% if request.args.get('bimestre') == "1" %}selected{% endif %}>1º Bimestre</option>
 <option value="2" {% if request.args.get('bimestre') == "2" %}selected{% endif %}>2º Bimestre</option>
 <option value="3" {% if request.args.get('bimestre') == "3" %}selected{% endif %}>3º Bimestre</option>
 <option value="4" {% if request.args.get('bimestre') == "4" %}selected{% endif %}>4º Bimestre</option>
 </select>
+</div>
 
-<br><br>
-
-<button type="submit">Gerar Relatório PDF</button>
+<button type="submit" class="btn-gerar">Gerar Relatório PDF</button>
 
 </form>
 
