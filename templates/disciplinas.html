@@ -2,62 +2,108 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Disciplinas</title>
 
 <style>
 
+*{
+    box-sizing: border-box;
+}
+
 body{
-font-family: Arial;
-background:#f5f5f5;
-text-align:center;
-margin:0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #2c7be5, #6a11cb);
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
+/* CAIXA */
 .box{
-background:white;
-width:350px;
-margin:auto;
-margin-top:40px;
-padding:20px;
-border-radius:8px;
-box-shadow:0 0 10px rgba(0,0,0,0.2);
+    background:white;
+    width:90%;
+    max-width:400px;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+    text-align:center;
 }
 
-select{
-width:100%;
-padding:8px;
-font-size:15px;
+/* TÍTULO */
+h2{
+    margin-bottom:15px;
+    color:#333;
 }
 
+/* INPUT */
 input{
-width:100%;
-padding:8px;
-font-size:15px;
-margin-bottom:10px;
+    width:100%;
+    padding:10px;
+    font-size:14px;
+    margin-bottom:10px;
+    border-radius:5px;
+    border:1px solid #ccc;
 }
 
+/* SELECT */
+select{
+    width:100%;
+    padding:10px;
+    font-size:14px;
+    border-radius:5px;
+    border:1px solid #ccc;
+}
+
+/* BOTÕES */
 button{
-width:100%;
-padding:10px;
-margin-top:10px;
-font-size:15px;
-border:none;
-border-radius:5px;
-background:#2c7be5;
-color:white;
-cursor:pointer;
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    font-size:14px;
+    border:none;
+    border-radius:6px;
+    background:#2c7be5;
+    color:white;
+    cursor:pointer;
+    transition:0.3s;
 }
 
 button:hover{
-background:#1a5ed8;
+    background:#1a5ed8;
 }
 
+/* BOTÃO VOLTAR */
 .voltar{
-background:#6c757d;
+    background:#6c757d;
 }
 
 .voltar:hover{
-background:#545b62;
+    background:#545b62;
+}
+
+/* LISTA */
+.lista{
+    margin-top:15px;
+}
+
+/* RESPONSIVO */
+@media (max-width:400px){
+
+    .box{
+        padding:20px;
+    }
+
+    h2{
+        font-size:20px;
+    }
+
+    button{
+        font-size:13px;
+    }
+
 }
 
 </style>
@@ -70,18 +116,18 @@ background:#545b62;
 
 <h2>Disciplinas</h2>
 
-<!-- CADASTRAR DISCIPLINA -->
+<!-- CADASTRAR -->
 <form method="POST">
 <input type="text" name="nova_disciplina" placeholder="Digite a disciplina" required>
 <button type="submit">Cadastrar Disciplina</button>
 </form>
 
-<br>
+<div class="lista">
 
-<!-- LISTA DISCIPLINAS -->
+<!-- LISTA -->
 <form method="GET">
 
-<select name="disciplina" size="8">
+<select name="disciplina" size="6">
 {% for d in disciplinas %}
 <option value="{{ d }}">{{ d }}</option>
 {% endfor %}
@@ -90,6 +136,10 @@ background:#545b62;
 <button type="submit">Selecionar</button>
 
 </form>
+
+</div>
+
+<br>
 
 <a href="/menu">
 <button class="voltar">Voltar</button>
