@@ -1,86 +1,46 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relatório</title>
-
-<style>
-body{
-    font-family: Arial;
-    background:#f5f5f5;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    margin:0;
-}
-
-.box{
-    background:white;
-    padding:20px;
-    border-radius:10px;
-    width:90%;
-    max-width:400px;
-}
-
-select,button{
-    width:100%;
-    padding:10px;
-    margin-top:10px;
-}
-
-button{
-    background:#2c7be5;
-    color:white;
-    border:none;
-}
-</style>
-
-</head>
-
-<body>
-
-<div class="box">
-
-<h2>Relatório</h2>
-
 <form action="/relatorio_pdf" method="get">
 
+<div class="grupo">
+<label>Disciplina</label>
 <select name="disciplina" required onchange="this.form.submit()">
-<option value="">Disciplina</option>
+<option value="">Selecione</option>
 {% for d in disciplinas %}
-<option value="{{ d }}" {% if request.args.get('disciplina') == d %}selected{% endif %}>{{ d }}</option>
+<option value="{{ d }}">{{ d }}</option>
 {% endfor %}
 </select>
+</div>
 
+<div class="grupo">
+<label>Turma</label>
 <select name="turma" required onchange="this.form.submit()">
-<option value="">Turma</option>
+<option value="">Selecione</option>
 {% for t in turmas %}
-<option value="{{ t }}" {% if request.args.get('turma') == t %}selected{% endif %}>{{ t }}</option>
+<option value="{{ t }}">{{ t }}</option>
 {% endfor %}
 </select>
+</div>
 
-<select name="aluno">
-<option value="">Todos os alunos</option>
-{% for a in alunos %}
-<option value="{{ a }}" {% if request.args.get('aluno') == a %}selected{% endif %}>{{ a }}</option>
-{% endfor %}
-</select>
-
+<div class="grupo">
+<label>Bimestre</label>
 <select name="bimestre" required>
-<option value="">Bimestre</option>
+<option value="">Selecione</option>
 <option value="1">1º</option>
 <option value="2">2º</option>
 <option value="3">3º</option>
 <option value="4">4º</option>
 </select>
-
-<button type="submit">Gerar PDF</button>
-
-</form>
-
 </div>
 
-</body>
-</html>
+<div class="grupo">
+<label>Aluno (opcional)</label>
+<select name="aluno">
+<option value="">Todos</option>
+{% for a in alunos %}
+<option value="{{ a }}">{{ a }}</option>
+{% endfor %}
+</select>
+</div>
+
+<button type="submit" class="btn-gerar">Gerar Relatório PDF</button>
+
+</form>
