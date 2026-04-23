@@ -354,7 +354,7 @@ def conteudos():
     )
 
 # ===============================
-# RELATÓRIO (TELA)
+# RELATÓRIO
 # ===============================
 @app.route("/relatorio")
 def relatorio():
@@ -385,7 +385,7 @@ def relatorio():
     )
 
 # ===============================
-# RELATÓRIO PDF (GERAL + INDIVIDUAL)
+# RELATÓRIO PDF (CORRIGIDO)
 # ===============================
 @app.route("/relatorio_pdf")
 def relatorio_pdf():
@@ -399,6 +399,9 @@ def relatorio_pdf():
     turma = request.args.get("turma")
     bimestre = request.args.get("bimestre")
     aluno_filtro = request.args.get("aluno")
+
+    if not disciplina or not turma or not bimestre:
+        return redirect("/relatorio")
 
     alunos = [a["aluno"] for a in db.alunos.find({
         "professor": professor,
@@ -418,52 +421,25 @@ def relatorio_pdf():
 
     notas = {n["aluno"]: n for n in notas_db}
 
-    presencas_db = list(db.presenca.find({
-        "professor": professor,
-        "disciplina": disciplina,
-        "turma": turma
-    }))
-
-    datas_presenca = sorted(list(set([p["data"] for p in presencas_db])))
-
-    presencas = {}
-    for p in presencas_db:
-        presencas.setdefault(p["aluno"], {})[p["data"]] = p["valor"]
-
-    conteudos_db = list(db.conteudos.find({
-        "professor": professor,
-        "disciplina": disciplina,
-        "turma": turma
-    }).sort("data", 1))
-
     arquivo = "/tmp/relatorio.pdf"
-    doc = SimpleDocTemplate(arquivo, pagesize=A4)
+    doc = SimpleDocTemplate(arquivo)
 
     styles = getSampleStyleSheet()
     elementos = []
 
-    titulo = f"Relatório - {aluno_filtro}" if aluno_filtro else "Relatório Escolar"
-
-    elementos.append(Paragraph(titulo, styles["Title"]))
+    elementos.append(Paragraph("Relatório Escolar", styles["Title"]))
     elementos.append(Spacer(1,10))
-    elementos.append(Paragraph(f"Disciplina: {disciplina}", styles["Normal"]))
-    elementos.append(Paragraph(f"Turma: {turma}", styles["Normal"]))
-    elementos.append(Paragraph(f"Bimestre: {bimestre}", styles["Normal"]))
-    elementos.append(Spacer(1,20))
 
-    dados = [["Aluno","P1","P2","Trab","Part","Tarefa","Média"]]
+    dados = [["Aluno","Média"]]
 
     for aluno in alunos:
         n = notas.get(aluno, {})
-        p1 = n.get("p1",0)
-        p2 = n.get("p2",0)
-        trab = n.get("trab",0)
-        part = n.get("part",0)
-        tarefa = n.get("tarefa",0)
+        media = round(
+            (n.get("p1",0)*0.3)+(n.get("p2",0)*0.3)+(n.get("trab",0)*0.1333)+
+            (n.get("part",0)*0.1333)+(n.get("tarefa",0)*0.1333),1
+        )
 
-        media = round((p1*0.3)+(p2*0.3)+(trab*0.1333)+(part*0.1333)+(tarefa*0.1333),1)
-
-        dados.append([aluno,p1,p2,trab,part,tarefa,media])
+        dados.append([aluno, media])
 
     tabela = Table(dados)
     tabela.setStyle(TableStyle([
@@ -476,4 +452,7 @@ def relatorio_pdf():
 
     return send_file(arquivo, as_attachment=True)
 
+# ===============================
+# VERCEL
+# ===============================
 application = app
