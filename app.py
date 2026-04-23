@@ -153,207 +153,6 @@ def alunos():
     return render_template("alunos.html", disciplinas=disciplinas, turmas=turmas, alunos=lista)
 
 # ===============================
-# PRESENÇA
-# ===============================
-@app.route("/presenca", methods=["GET","POST"])
-def presenca():
-
-    if "usuario" not in session:
-        return redirect("/")
-
-    professor = session["usuario"]
-
-    disciplina = request.values.get("disciplina")
-    turma = request.values.get("turma")
-    data = request.values.get("data")
-
-    disciplinas = list(set([d["disciplina"] for d in db.disciplinas.find({"professor": professor})]))
-    turmas = list(set([t["turma"] for t in db.turmas.find({"professor": professor})]))
-
-    alunos = []
-    if disciplina and turma:
-        alunos = [a["aluno"] for a in db.alunos.find({
-            "professor": professor,
-            "disciplina": disciplina,
-            "turma": turma
-        })]
-
-    if request.method == "POST":
-
-        db.presenca.delete_many({
-            "professor": professor,
-            "disciplina": disciplina,
-            "turma": turma,
-            "data": data
-        })
-
-        for i, aluno in enumerate(alunos, start=1):
-            valor = request.form.get(f"presenca_{i}") or "F"
-
-            db.presenca.insert_one({
-                "professor": professor,
-                "disciplina": disciplina,
-                "turma": turma,
-                "data": data,
-                "aluno": aluno,
-                "valor": valor
-            })
-
-    presencas = {}
-    registros = db.presenca.find({
-        "professor": professor,
-        "disciplina": disciplina,
-        "turma": turma,
-        "data": data
-    })
-
-    for r in registros:
-        presencas[r["aluno"]] = r["valor"]
-
-    return render_template("presenca.html",
-        disciplinas=disciplinas,
-        turmas=turmas,
-        disciplina=disciplina,
-        turma=turma,
-        data=data,
-        alunos=alunos,
-        presencas=presencas,
-        salvo=(request.method=="POST")
-    )
-
-# ===============================
-# NOTAS
-# ===============================
-@app.route("/notas", methods=["GET","POST"])
-def notas():
-
-    if "usuario" not in session:
-        return redirect("/")
-
-    professor = session["usuario"]
-
-    disciplina = request.values.get("disciplina")
-    turma = request.values.get("turma")
-    bimestre = request.values.get("bimestre")
-
-    disciplinas = list(set([d["disciplina"] for d in db.disciplinas.find({"professor": professor})]))
-    turmas = list(set([t["turma"] for t in db.turmas.find({"professor": professor})]))
-
-    alunos = []
-    if disciplina and turma:
-        alunos = [a["aluno"] for a in db.alunos.find({
-            "professor": professor,
-            "disciplina": disciplina,
-            "turma": turma
-        })]
-
-    if request.method == "POST":
-
-        db.notas.delete_many({
-            "professor": professor,
-            "disciplina": disciplina,
-            "turma": turma,
-            "bimestre": bimestre
-        })
-
-        for i, aluno in enumerate(alunos, start=1):
-
-            db.notas.insert_one({
-                "professor": professor,
-                "disciplina": disciplina,
-                "turma": turma,
-                "bimestre": bimestre,
-                "aluno": aluno,
-                "p1": float(request.form.get(f"p1_{i}") or 0),
-                "p2": float(request.form.get(f"p2_{i}") or 0),
-                "trab": float(request.form.get(f"trab_{i}") or 0),
-                "part": float(request.form.get(f"part_{i}") or 0),
-                "tarefa": float(request.form.get(f"tarefa_{i}") or 0)
-            })
-
-    notas = {}
-    for r in db.notas.find({
-        "professor": professor,
-        "disciplina": disciplina,
-        "turma": turma,
-        "bimestre": bimestre
-    }):
-        notas[r["aluno"]] = r
-
-    return render_template("notas.html",
-        disciplinas=disciplinas,
-        turmas=turmas,
-        disciplina=disciplina,
-        turma=turma,
-        bimestre=bimestre,
-        alunos=alunos,
-        notas=notas,
-        salvo=(request.method=="POST")
-    )
-
-# ===============================
-# CONTEÚDOS
-# ===============================
-@app.route("/conteudos", methods=["GET","POST"])
-def conteudos():
-
-    if "usuario" not in session:
-        return redirect("/")
-
-    professor = session["usuario"]
-
-    disciplina = request.values.get("disciplina")
-    turma = request.values.get("turma")
-    data = request.values.get("data")
-
-    disciplinas = list(set([d["disciplina"] for d in db.disciplinas.find({"professor": professor})]))
-    turmas = list(set([t["turma"] for t in db.turmas.find({"professor": professor})]))
-
-    if request.method == "POST":
-        conteudo = request.form.get("conteudo")
-
-        db.conteudos.delete_many({
-            "professor": professor,
-            "disciplina": disciplina,
-            "turma": turma,
-            "data": data
-        })
-
-        db.conteudos.insert_one({
-            "professor": professor,
-            "disciplina": disciplina,
-            "turma": turma,
-            "data": data,
-            "conteudo": conteudo
-        })
-
-    atual = db.conteudos.find_one({
-        "professor": professor,
-        "disciplina": disciplina,
-        "turma": turma,
-        "data": data
-    })
-
-    conteudo_atual = atual["conteudo"] if atual else ""
-
-    lista = list(db.conteudos.find({
-        "professor": professor,
-        "disciplina": disciplina,
-        "turma": turma
-    }).sort("data", -1))
-
-    return render_template("conteudos.html",
-        disciplinas=disciplinas,
-        turmas=turmas,
-        disciplina=disciplina,
-        turma=turma,
-        data=data,
-        conteudo_atual=conteudo_atual,
-        conteudos=lista,
-        salvo=(request.method=="POST")
-    )
-
-# ===============================
 # RELATÓRIO (TELA)
 # ===============================
 @app.route("/relatorio")
@@ -364,12 +163,25 @@ def relatorio():
 
     professor = session["usuario"]
 
+    disciplina = request.args.get("disciplina")
+    turma = request.args.get("turma")
+
     disciplinas = list(set([d["disciplina"] for d in db.disciplinas.find({"professor": professor})]))
     turmas = list(set([t["turma"] for t in db.turmas.find({"professor": professor})]))
 
+    alunos = []
+
+    if disciplina and turma:
+        alunos = [a["aluno"] for a in db.alunos.find({
+            "professor": professor,
+            "disciplina": disciplina,
+            "turma": turma
+        })]
+
     return render_template("relatorio.html",
         disciplinas=disciplinas,
-        turmas=turmas
+        turmas=turmas,
+        alunos=alunos
     )
 
 # ===============================
@@ -386,19 +198,19 @@ def relatorio_pdf():
     disciplina = request.args.get("disciplina")
     turma = request.args.get("turma")
     bimestre = request.args.get("bimestre")
+    aluno_especifico = request.args.get("aluno")
 
-    # ===============================
     # ALUNOS
-    # ===============================
-    alunos = [a["aluno"] for a in db.alunos.find({
-        "professor": professor,
-        "disciplina": disciplina,
-        "turma": turma
-    })]
+    if aluno_especifico:
+        alunos = [aluno_especifico]
+    else:
+        alunos = [a["aluno"] for a in db.alunos.find({
+            "professor": professor,
+            "disciplina": disciplina,
+            "turma": turma
+        })]
 
-    # ===============================
     # NOTAS
-    # ===============================
     notas_db = db.notas.find({
         "professor": professor,
         "disciplina": disciplina,
@@ -408,59 +220,23 @@ def relatorio_pdf():
 
     notas = {n["aluno"]: n for n in notas_db}
 
-    # ===============================
-    # PRESENÇAS (AGRUPADAS POR DATA)
-    # ===============================
-    presencas_db = list(db.presenca.find({
-        "professor": professor,
-        "disciplina": disciplina,
-        "turma": turma
-    }))
-
-    datas_presenca = sorted(list(set([p["data"] for p in presencas_db])))
-
-    presencas = {}
-    for p in presencas_db:
-        aluno = p["aluno"]
-        data = p["data"]
-        valor = p["valor"]
-
-        if aluno not in presencas:
-            presencas[aluno] = {}
-
-        presencas[aluno][data] = valor
-
-    # ===============================
-    # CONTEÚDOS
-    # ===============================
-    conteudos_db = list(db.conteudos.find({
-        "professor": professor,
-        "disciplina": disciplina,
-        "turma": turma
-    }).sort("data", 1))
-
-    # ===============================
     # PDF
-    # ===============================
     arquivo = "/tmp/relatorio.pdf"
     doc = SimpleDocTemplate(arquivo, pagesize=A4)
 
     styles = getSampleStyleSheet()
     elementos = []
 
-    # TÍTULO
-    elementos.append(Paragraph(f"Relatório Escolar", styles["Title"]))
+    titulo = "Relatório Escolar"
+    if aluno_especifico:
+        titulo += f" - {aluno_especifico}"
+
+    elementos.append(Paragraph(titulo, styles["Title"]))
     elementos.append(Spacer(1,10))
     elementos.append(Paragraph(f"Disciplina: {disciplina}", styles["Normal"]))
     elementos.append(Paragraph(f"Turma: {turma}", styles["Normal"]))
     elementos.append(Paragraph(f"Bimestre: {bimestre}", styles["Normal"]))
     elementos.append(Spacer(1,20))
-
-    # ===============================
-    # TABELA DE NOTAS
-    # ===============================
-    elementos.append(Paragraph("Notas dos Alunos", styles["Heading2"]))
-    elementos.append(Spacer(1,10))
 
     dados = [["Aluno","P1","P2","Trab","Part","Tarefa","Média"]]
 
@@ -484,44 +260,7 @@ def relatorio_pdf():
     ]))
 
     elementos.append(tabela)
-    elementos.append(Spacer(1,20))
 
-    # ===============================
-    # TABELA DE PRESENÇA
-    # ===============================
-    elementos.append(Paragraph("Controle de Presença", styles["Heading2"]))
-    elementos.append(Spacer(1,10))
-
-    cabecalho = ["Aluno"] + datas_presenca
-    dados_presenca = [cabecalho]
-
-    for aluno in alunos:
-        linha = [aluno]
-        for data in datas_presenca:
-            valor = presencas.get(aluno, {}).get(data, "-")
-            linha.append(valor)
-        dados_presenca.append(linha)
-
-    tabela_presenca = Table(dados_presenca)
-    tabela_presenca.setStyle(TableStyle([
-        ("GRID",(0,0),(-1,-1),1,colors.black),
-        ("BACKGROUND",(0,0),(-1,0),colors.lightgrey)
-    ]))
-
-    elementos.append(tabela_presenca)
-    elementos.append(Spacer(1,20))
-
-    # ===============================
-    # CONTEÚDOS DAS AULAS
-    # ===============================
-    elementos.append(Paragraph("Conteúdos das Aulas", styles["Heading2"]))
-    elementos.append(Spacer(1,10))
-
-    for c in conteudos_db:
-        elementos.append(Paragraph(f"<b>{c['data']}</b> - {c['conteudo']}", styles["Normal"]))
-        elementos.append(Spacer(1,8))
-
-    # GERAR PDF
     doc.build(elementos)
 
     return send_file(arquivo, as_attachment=True)
@@ -533,7 +272,4 @@ def relatorio_pdf():
 def teste():
     return "API OK 🚀"
 
-# ===============================
-# VERCEL
-# ===============================
 application = app
