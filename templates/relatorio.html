@@ -112,11 +112,12 @@ button:hover{
 
 <h2>Relatório</h2>
 
-<form action="/relatorio_pdf" method="get">
+<!-- 🔹 FORM DE FILTRO (NÃO GERA PDF) -->
+<form method="GET" action="/relatorio">
 
 <div class="grupo">
 <label>Disciplina</label>
-<select name="disciplina" required onchange="this.form.submit()">
+<select name="disciplina" onchange="this.form.submit()">
 <option value="">Selecione</option>
 {% for d in disciplinas %}
 <option value="{{ d }}" 
@@ -129,7 +130,7 @@ button:hover{
 
 <div class="grupo">
 <label>Turma</label>
-<select name="turma" required onchange="this.form.submit()">
+<select name="turma" onchange="this.form.submit()">
 <option value="">Selecione</option>
 {% for t in turmas %}
 <option value="{{ t }}"
@@ -139,6 +140,14 @@ button:hover{
 {% endfor %}
 </select>
 </div>
+
+</form>
+
+<!-- 🔹 FORM DE GERAÇÃO DO PDF -->
+<form action="/relatorio_pdf" method="get">
+
+<input type="hidden" name="disciplina" value="{{ request.args.get('disciplina') }}">
+<input type="hidden" name="turma" value="{{ request.args.get('turma') }}">
 
 <div class="grupo">
 <label>Bimestre</label>
@@ -151,7 +160,6 @@ button:hover{
 </select>
 </div>
 
-<!-- NOVO CAMPO (SEM QUEBRAR LAYOUT) -->
 <div class="grupo">
 <label>Aluno (opcional)</label>
 <select name="aluno">
