@@ -393,6 +393,10 @@ def relatorio_pdf():
     if "usuario" not in session:
         return redirect("/")
 
+    # 🔒 segurança extra (dica profissional)
+    if request.method != "GET":
+        return redirect("/relatorio")
+
     professor = session["usuario"]
 
     disciplina = request.args.get("disciplina")
@@ -400,18 +404,26 @@ def relatorio_pdf():
     bimestre = request.args.get("bimestre")
     aluno_filtro = request.args.get("aluno")
 
+    # 🚨 BLOQUEIO (resolve seu problema do PDF automático)
     if not disciplina or not turma or not bimestre:
         return redirect("/relatorio")
 
+    # ===============================
+    # ALUNOS
+    # ===============================
     alunos = [a["aluno"] for a in db.alunos.find({
         "professor": professor,
         "disciplina": disciplina,
         "turma": turma
     })]
 
+    # filtro individual
     if aluno_filtro:
         alunos = [aluno_filtro]
 
+    # ===============================
+    # NOTAS
+    # ===============================
     notas_db = db.notas.find({
         "professor": professor,
         "disciplina": disciplina,
@@ -421,33 +433,128 @@ def relatorio_pdf():
 
     notas = {n["aluno"]: n for n in notas_db}
 
+    # ===============================
+    # PRESENÇA (AGRUPADA)
+    # ===============================
+    presencas_db = list(db.presenca.find({
+        "professor": professor,
+        "disciplina": disciplina,
+        "turma": turma
+    }))
+
+    datas_presenca = sorted(list(set([p["data"] for p in presencas_db])))
+
+    presencas = {}
+    for p in presencas_db:
+        presencas.setdefault(p["aluno"], {})[p["data"]] = p["valor"]
+
+    # ===============================
+    # CONTEÚDOS
+    # ===============================
+    conteudos_db = list(db.conteudos.find({
+        "professor": professor,
+        "disciplina": disciplina,
+        "turma": turma
+    }).sort("data", 1))
+
+    # ===============================
+    # PDF
+    # ===============================
     arquivo = "/tmp/relatorio.pdf"
-    doc = SimpleDocTemplate(arquivo)
+    doc = SimpleDocTemplate(arquivo, pagesize=A4)
 
     styles = getSampleStyleSheet()
     elementos = []
 
-    elementos.append(Paragraph("Relatório Escolar", styles["Title"]))
+    # ===============================
+    # CABEÇALHO
+    # ===============================
+    titulo = f"Relatório do Aluno: {aluno_filtro}" if aluno_filtro else "Relatório da Turma"
+
+    elementos.append(Paragraph(titulo, styles["Title"]))
+    elementos.append(Spacer(1,10))
+    elementos.append(Paragraph(f"Disciplina: {disciplina}", styles["Normal"]))
+    elementos.append(Paragraph(f"Turma: {turma}", styles["Normal"]))
+    elementos.append(Paragraph(f"Bimestre: {bimestre}", styles["Normal"]))
+    elementos.append(Spacer(1,20))
+
+    # ===============================
+    # TABELA DE NOTAS
+    # ===============================
+    elementos.append(Paragraph("Notas", styles["Heading2"]))
     elementos.append(Spacer(1,10))
 
-    dados = [["Aluno","Média"]]
+    dados = [["Aluno","P1","P2","Trab","Part","Tarefa","Média"]]
 
     for aluno in alunos:
         n = notas.get(aluno, {})
-        media = round(
-            (n.get("p1",0)*0.3)+(n.get("p2",0)*0.3)+(n.get("trab",0)*0.1333)+
-            (n.get("part",0)*0.1333)+(n.get("tarefa",0)*0.1333),1
-        )
 
-        dados.append([aluno, media])
+        p1 = n.get("p1",0)
+        p2 = n.get("p2",0)
+        trab = n.get("trab",0)
+        part = n.get("part",0)
+        tarefa = n.get("tarefa",0)
 
-    tabela = Table(dados)
-    tabela.setStyle(TableStyle([
+        media = round((p1*0.3)+(p2*0.3)+(trab*0.1333)+(part*0.1333)+(tarefa*0.1333),1)
+
+        dados.append([aluno,p1,p2,trab,part,tarefa,media])
+
+    tabela_notas = Table(dados)
+    tabela_notas.setStyle(TableStyle([
+        ("BACKGROUND",(0,0),(-1,0),colors.grey),
+        ("TEXTCOLOR",(0,0),(-1,0),colors.white),
         ("GRID",(0,0),(-1,-1),1,colors.black)
     ]))
 
-    elementos.append(tabela)
+    elementos.append(tabela_notas)
+    elementos.append(Spacer(1,20))
 
+    # ===============================
+    # PRESENÇA
+    # ===============================
+    elementos.append(Paragraph("Presenças", styles["Heading2"]))
+    elementos.append(Spacer(1,10))
+
+    if aluno_filtro:
+        # 🔹 PRESENÇA INDIVIDUAL (lista por data)
+        for data in datas_presenca:
+            valor = presencas.get(aluno_filtro, {}).get(data, "-")
+            elementos.append(Paragraph(f"{data}: {valor}", styles["Normal"]))
+            elementos.append(Spacer(1,5))
+    else:
+        # 🔹 PRESENÇA DA TURMA (tabela)
+        cabecalho = ["Aluno"] + datas_presenca
+        dados_presenca = [cabecalho]
+
+        for aluno in alunos:
+            linha = [aluno]
+            for data in datas_presenca:
+                linha.append(presencas.get(aluno, {}).get(data, "-"))
+            dados_presenca.append(linha)
+
+        tabela_presenca = Table(dados_presenca)
+        tabela_presenca.setStyle(TableStyle([
+            ("GRID",(0,0),(-1,-1),1,colors.black),
+            ("BACKGROUND",(0,0),(-1,0),colors.lightgrey)
+        ]))
+
+        elementos.append(tabela_presenca)
+
+    elementos.append(Spacer(1,20))
+
+    # ===============================
+    # CONTEÚDOS
+    # ===============================
+    elementos.append(Paragraph("Conteúdos das Aulas", styles["Heading2"]))
+    elementos.append(Spacer(1,10))
+
+    for c in conteudos_db:
+        elementos.append(Paragraph(f"<b>{c['data']}</b> - {c['conteudo']}", styles["Normal"]))
+        elementos.append(Spacer(1,6))
+
+    # ===============================
+    # GERAR PDF
+    # ===============================
     doc.build(elementos)
 
     return send_file(arquivo, as_attachment=True)
